@@ -26,8 +26,8 @@ public class RobotTest extends BaseTest {
     @Test
     public void testTuling() throws Exception {
         String url = "http://www.tuling123.com/openapi/api";
-        String apiKey = "";
-        String secret = "";
+        String apiKey = "6d892e33a8c7528355ddbbe820389df9";
+        String secret = "ccb3a92c14f8ba4e";
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("key", apiKey);

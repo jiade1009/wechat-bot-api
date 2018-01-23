@@ -48,6 +48,7 @@ public class StartUI extends WechatApi {
             getUUID();
             log.info(Const.LOG_MSG_GET_QRCODE);
             final String qrCodePath = genqrcode();
+            System.out.println("qucodepath="+qrCodePath);
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
                     try {
@@ -69,7 +70,7 @@ public class StartUI extends WechatApi {
             }
             break;
         }
-        qrCodeFrame.setVisible(false);
+        qrCodeFrame.setVisible(false); //登录成功，二维码隐藏
         qrCodeFrame.dispose();
     }
 
@@ -110,13 +111,14 @@ public class StartUI extends WechatApi {
                 @Override
                 public void run() {
                     log.info(Const.LOG_MSG_GET_GROUP_MEMBER);
-                    StartUI.super.fetchGroupContacts();
+                    StartUI.super.fetchGroupContacts(); //封装群组资源
                 }
             });
         }
         log.info(Const.LOG_MSG_SNAPSHOT);
+        super.createchatroom();
         super.snapshot();
-        this.listen();
+        //this.listen();
     }
 
     private void listen() {
@@ -125,7 +127,7 @@ public class StartUI extends WechatApi {
             int[] checkResponse = synccheck();
             int   retcode       = checkResponse[0];
             int   selector      = checkResponse[1];
-            log.debug("retcode: {}, selector: {}", retcode, selector);
+//            log.debug("retcode: {}, selector: {}", retcode, selector);
             switch (retcode) {
                 case 1100:
                     log.warn(Const.LOG_MSG_LOGOUT);
@@ -140,7 +142,7 @@ public class StartUI extends WechatApi {
                     this.handle(selector);
                     break;
                 default:
-                    log.debug("wxSync: {}\n", wxSync().toString());
+//                    log.debug("wxSync: {}\n", wxSync().toString());
                     break;
             }
         }

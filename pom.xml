@@ -4,7 +4,7 @@
 
     <groupId>io.github.biezhi</groupId>
     <artifactId>wechat-robot</artifactId>
-    <version>0.0.3</version>
+    <version>kekeinfo-0.0.3</version>
     <packaging>jar</packaging>
 
     <name>wechat-robot</name>
@@ -54,7 +54,7 @@
     </dependencies>
 
     <build>
-        <finalName>wechat-robot</finalName>
+       <!--  <finalName>wechat-robot</finalName>
         <resources>
             <resource>
                 <directory>src/main/java</directory>
@@ -79,8 +79,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.2</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>UTF8</encoding>
                 </configuration>
             </plugin>
@@ -115,12 +115,83 @@
                             <addClasspath>true</addClasspath>
                         </manifest>
                         <manifestEntries>
-                            <!-- 在Class-Path下添加配置文件的路径 -->
+                            在Class-Path下添加配置文件的路径
                             <Class-Path>config/</Class-Path>
                         </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
-        </plugins>
+        </plugins> -->
+        <pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.2</version>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+						<encoding>UTF-8</encoding>
+						<compilerArgument>-proc:none</compilerArgument>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.12</version>
+					<configuration>
+          				<skipTests>true</skipTests>
+        			</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>2.3.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.2.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.3</version>
+				</plugin>
+				
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.codehaus.mojo</groupId>
+										<artifactId>aspectj-maven-plugin</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>test-compile</goal>
+											<goal>compile</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
     </build>
 </project>

@@ -1,7 +1,12 @@
 package io.github.biezhi.wechat.handle;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import io.github.biezhi.wechat.api.WechatApi;
 import io.github.biezhi.wechat.model.GroupMessage;
 import io.github.biezhi.wechat.model.UserMessage;
 
@@ -13,6 +18,7 @@ import io.github.biezhi.wechat.model.UserMessage;
  */
 public abstract class AbstractMessageHandler implements MessageHandle {
 
+	protected static final Logger log = LoggerFactory.getLogger(AbstractMessageHandler.class);
     @Override
     public void wxSync(JsonObject msg) {
     }

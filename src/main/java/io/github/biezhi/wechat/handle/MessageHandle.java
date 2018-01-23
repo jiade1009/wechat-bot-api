@@ -13,6 +13,10 @@ import io.github.biezhi.wechat.model.UserMessage;
  */
 public interface MessageHandle {
 
+	final String join_type = "入群:A01";
+	final String depart_type = "退群:A02";
+	final String incomprehension = "A1000";  //机器人没有正确的回答结果
+	
     /**
      * 保存微信消息
      *

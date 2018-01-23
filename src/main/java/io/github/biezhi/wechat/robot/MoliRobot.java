@@ -47,12 +47,13 @@ public class MoliRobot extends AbstractMessageHandler {
 
     @Override
     public void groupMessage(GroupMessage groupMessage) {
-        System.out.println(groupMessage);
         String text = groupMessage.getText();
-        if (groupMessage.getGroup_name().equals("测试群聊567") && Utils.isNotBlank(text)) {
+        if (groupMessage.getGroup_name().equals("技术1") && Utils.isNotBlank(text)) {
 //            groupMessage.sendText(groupMessage.toString(), groupMessage.getGroupId());
-            String result = getResult(groupMessage.getText());
-            groupMessage.sendText(result, groupMessage.getGroupId());
+            String result = getResult(text);
+            if (!result.equals(incomprehension)) {
+            	groupMessage.sendText(result, groupMessage.getGroupId());
+			}
         }
     }
 

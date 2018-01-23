@@ -1,19 +1,37 @@
 package io.github.biezhi.wechat.api;
 
-import com.google.gson.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.google.zxing.common.StringUtils;
+
 import io.github.biezhi.wechat.Utils;
 import io.github.biezhi.wechat.model.Const;
 import io.github.biezhi.wechat.model.Environment;
 import io.github.biezhi.wechat.model.Session;
-import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import okhttp3.FormBody;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * 微信API实现
@@ -55,6 +73,7 @@ public class WechatApi {
 
     // 登陆账号信息
     protected Map<String, Object> user;
+    protected WxHostUser host;  //登录微信用户基本信息
 
     // 好友+群聊+公众号+特殊账号
     protected JsonArray memberList;
@@ -67,7 +86,7 @@ public class WechatApi {
     // 群
     protected JsonArray groupList;
 
-    // 群聊成员字典 {group_id:[]}
+	// 群聊成员字典 {group_id:[]}
     protected Map<String, JsonArray> groupMemeberList = new HashMap<String, JsonArray>();
 
     // 公众号／服务号
@@ -89,7 +108,23 @@ public class WechatApi {
         this.conf_factory();
     }
 
-    private void conf_factory() {
+    public WxHostUser getHost() {
+		return host;
+	}
+
+	public void setHost(WxHostUser host) {
+		this.host = host;
+	}
+	
+    public JsonArray getContactList() {
+		return contactList;
+	}
+
+	public JsonArray getGroupList() {
+		return groupList;
+	}
+
+	private void conf_factory() {
         // wx.qq.com
         String e = this.wxHost;
         String t = "login.weixin.qq.com";
@@ -255,8 +290,6 @@ public class WechatApi {
                 .add("t", "webwx")
                 .add("_", System.currentTimeMillis() + "").build();
 
-        System.out.println(url);
-
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -272,6 +305,31 @@ public class WechatApi {
             log.error("[*] 生成二维码失败", e);
         }
         return output.getPath();
+    }
+    
+    /**
+     * 获取二维码字节数组，提供web模式
+     * @return
+     */
+    public byte[] genqrcodeStream() {
+        String     url    = conf.get("API_qrcode_img") + session.getUuid();
+        RequestBody body = new FormBody.Builder()
+                .add("t", "webwx")
+                .add("_", System.currentTimeMillis() + "").build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        try {
+            Response         response = client.newCall(request).execute();
+            byte[]           bytes    = response.body().bytes();
+            return bytes;
+        } catch (Exception e) {
+            log.error("[*] 生成二维码失败", e);
+        }
+        return null;
     }
 
     /**
@@ -291,7 +349,7 @@ public class WechatApi {
             log.warn("扫描二维码验证失败");
             return false;
         }
-
+        log.debug("扫码返回response信息："+response);
         String code = Utils.match("window.code=(\\d+);", response);
         if (Utils.isBlank(code)) {
             log.warn("扫描二维码验证失败");
@@ -323,7 +381,9 @@ public class WechatApi {
      * @return
      */
     public boolean login() {
-
+    	if (this.redirectUri==null) {
+			return false;
+		}
         Request.Builder requestBuilder = new Request.Builder().url(this.redirectUri);
         Request         request        = requestBuilder.build();
 
@@ -377,11 +437,16 @@ public class WechatApi {
         if (null == response) {
             return false;
         }
-
+        log.debug(response.toString());
         this.user = new Gson().fromJson(response.get("User"), new TypeToken<Map<String, Object>>() {
         }.getType());
+        
         this.makeSynckey(response);
-
+        host = new WxHostUser(); //初始化登录用户基本信息
+        host.setUserName(user.get("UserName").toString());
+        host.setRemarkName(user.get("RemarkName").toString());
+        host.setShowName(user.get("NickName").toString());
+        
         JsonObject baseResponse = response.getAsJsonObject("BaseResponse");
         return baseResponse.get("Ret").getAsInt() == 0;
     }
@@ -459,8 +524,10 @@ public class WechatApi {
                 this.specialUsersList.add(contact);
             } else if (contact.get("UserName").getAsString().contains("@@")) {// 群聊
                 ContactList.remove(contact);
+                log.info("群聊组信息："+contact);
                 this.groupList.add(contact);
             } else if (contact.get("UserName").getAsString().equals(this.user.get("UserName"))) {// 自己
+            	log.debug("自己的id："+contact.get("UserName").getAsString());
                 ContactList.remove(contact);
             }
         }
@@ -549,6 +616,7 @@ public class WechatApi {
             String     g_id        = member_list.get("UserName").getAsString();
             JsonObject group       = g_dict.get(g_id);
             group.addProperty("MemberCount", member_list.get("MemberCount").getAsInt());
+            log.debug("群："+g_id+", 人数："+member_list.get("MemberCount").getAsInt());
             group.addProperty("OwnerUin", member_list.get("OwnerUin").getAsInt());
             this.groupMemeberList.put(g_id, member_list.get("MemberList").getAsJsonArray());
         }
@@ -576,6 +644,8 @@ public class WechatApi {
         params.put("_", System.currentTimeMillis());
 
         String response = doGet(url, this.cookie, params);
+        log.debug("同步检查，返回结果："+response);
+        System.out.println("同步检查，返回结果："+response);
 
         int[] arr = new int[]{-1, -1};
         if (Utils.isBlank(response)) {
@@ -708,6 +778,47 @@ public class WechatApi {
             }
         }
         return user;
+    }
+    
+    public void createchatroom() {
+    	String name1 = "";
+    	String name2 = "";
+    	if (contactList!=null) {
+    		for (JsonElement element : contactList) {
+    			JsonObject contact = element.getAsJsonObject();
+    			log.info(contact.toString());
+    			String nickName = contact.get("NickName").getAsString();
+    			log.info(nickName);
+    			if (nickName.equals("张楚")) {
+					name1 = contact.get("UserName").getAsString();
+				} else if(nickName.equals("Joe")) {
+					name2 = contact.get("UserName").getAsString();
+				} 
+			}
+		}
+    	String url = conf.get("API_webwxcreatechatroom") + "?r=%s&lang=%s";
+        url = String.format(url, conf.get("LANG"), System.currentTimeMillis());
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("BaseRequest", this.baseRequest);
+        params.put("Topic", "测试群组创建2");
+        params.put("MemberCount", 3);
+
+        List<Map> list = new ArrayList<Map>();
+        String[] groupIds = new String[]{this.user.get("UserName").toString(),
+        		name1, 
+        		name2};
+        for (String groupId : groupIds) {
+            list.add(Utils.createMap("UserName", groupId));
+        }
+        params.put("MemberList", list);
+        System.out.println(groupIds);
+        JsonElement response = doPost(url, params);
+        System.out.println(response.getAsJsonObject().toString());
+        JsonObject o = response.getAsJsonObject();
+        sendText("测试建群", o.get("ChatRoomName").getAsString());
+        sendText("群ID是否变化", "@@c61dc42ec4ab83637a889af5874e28ec2f9c89279f68b6e4e0d0b5b0a7d1114d");
+        
     }
 
     /**

@@ -28,6 +28,8 @@ public class TulingRobot extends AbstractMessageHandler {
     private String baseUrl = "http://www.tuling123.com/openapi/api";
     private String apiKey;
     private String apiSecret;
+    private boolean autoReplyForUser = true;
+    private boolean autoReplyForGroup = false;
 
     public TulingRobot(Environment environment) {
         this.apiKey = environment.get("tuling.api_key");
@@ -42,8 +44,12 @@ public class TulingRobot extends AbstractMessageHandler {
         String text = userMessage.getText();
         JsonObject raw_msg = userMessage.getRawMsg();
         String toUid = raw_msg.get("FromUserName").getAsString();
-        String result = getResult(text);
-        userMessage.sendText(result, toUid);
+        log.debug("接收到的信息："+text);
+        if (autoReplyForUser) {
+        	String result = getResult(text);
+        	log.debug("tuling回复信息："+result);
+        	userMessage.sendText(result, toUid);
+		}
     }
 
     @Override
@@ -51,8 +57,12 @@ public class TulingRobot extends AbstractMessageHandler {
         System.out.println(groupMessage);
         String text = groupMessage.getText();
         if (Utils.isNotBlank(text)) {
-            String result = getResult(groupMessage.getText());
-            groupMessage.sendText(result, groupMessage.getGroupId());
+        	log.debug("接收到的信息："+text);
+            if (autoReplyForGroup) {
+            	String result = getResult(groupMessage.getText());
+            	log.debug("tuling回复信息："+result);
+            	groupMessage.sendText(result, groupMessage.getGroupId());
+			}
         }
     }
 
